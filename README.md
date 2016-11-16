@@ -22,3 +22,4 @@ This is a text based diary, inspired by [khal](https://github.com/pimutils/khal)
   
   (Optionally create an alias for convencience: `alias diary="~/.bin/diary ~/.diary")`
 
+4. Use the keypad or VIM-like shortcuts to move between dates. Type 't' for today and 'e' to edit. That's it that's all.
