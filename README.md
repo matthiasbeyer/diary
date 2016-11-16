@@ -1,0 +1,2 @@
+# diary
+Simple CLI diary
