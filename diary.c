@@ -18,7 +18,8 @@ struct tm cal_end;
 
 void draw_wdays(WINDOW* head) {
     char* weekdays[]    = {"Mo","Tu","We","Th","Fr","Sa","Su"};
-    for (int wd = 0; wd < sizeof(weekdays)/sizeof(weekdays[0]); wd++) {
+    int wd;
+    for (wd = 0; wd < sizeof(weekdays)/sizeof(weekdays[0]); wd++) {
         waddstr(head, weekdays[wd]);
         waddch(head, ' ');
     }
