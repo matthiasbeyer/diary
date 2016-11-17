@@ -10,7 +10,7 @@ This is a text based diary, inspired by [khal](https://github.com/pimutils/khal)
     
 2. Compile the diary with ncurses library:
     ```
-    gcc diary.c -o diary -lncurses -std=gnu11
+    gcc diary.c -o diary -lncurses
     ```
     
 3. Run the diary with the folder for the text files as first argument:
@@ -23,3 +23,6 @@ This is a text based diary, inspired by [khal](https://github.com/pimutils/khal)
   (Optionally create an alias for convencience: `alias diary="~/.bin/diary ~/.diary")`
 
 4. Use the keypad or VIM-like shortcuts to move between dates. Type 't' for today and 'e' to edit. That's it that's all.
+
+## Demo
+![Diary Demo](https://raw.githubusercontent.com/in0rdr/diary/master/demo.gif)
