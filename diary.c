@@ -227,9 +227,11 @@ int main(int argc, char** argv)
                 ret = go_to(cal, aside, raw_time, &pad_pos);
                 break;
             case 'e':
-                if (ecmd)
+                if (ecmd) {
+                    curs_set(1);
                     system(ecmd);
-                curs_set(0);
+                    curs_set(0);
+                }
                 break;
         }
 
