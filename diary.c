@@ -81,12 +81,7 @@ bool is_leap(int year) {
     // normally leap is every 4 years,
     // but is skipped every 100 years,
     // unless it is divisible by 400
-    if (year % 400 == 0)
-        return true;
-    if (year % 4 == 0 && year % 100 != 0)
-        return true;
-
-    return false;
+    return (year % 400 == 0) || (year % 4 == 0 && year % 100 != 0);
 }
 
 void read_diary(char* dir) {
