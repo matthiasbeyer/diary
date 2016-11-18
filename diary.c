@@ -16,11 +16,11 @@ char curs_date_str[70];
 struct tm cal_start;
 struct tm cal_end;
 
+static const char* WEEKDAYS[] = {"Mo","Tu","We","Th","Fr","Sa","Su",0};
+
 void draw_wdays(WINDOW* head) {
-    char* weekdays[]    = {"Mo","Tu","We","Th","Fr","Sa","Su"};
-    int wd;
-    for (wd = 0; wd < sizeof(weekdays)/sizeof(weekdays[0]); wd++) {
-        waddstr(head, weekdays[wd]);
+    for (char* wd = WEEKDAYS; *wd; wd++) {
+        waddstr(head, wd);
         waddch(head, ' ');
     }
     wrefresh(head);
