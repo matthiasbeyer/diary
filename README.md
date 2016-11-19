@@ -12,7 +12,7 @@ This is a text based diary, inspired by [khal](https://github.com/pimutils/khal)
     
 2. Compile the diary with ncurses library:
     ```
-    gcc diary.c -o diary -lncurses
+    make clean; make;
     ```
     
 3. Run the diary with the folder for the text files as first argument:
