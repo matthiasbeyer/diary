@@ -219,10 +219,13 @@ int main(int argc, char** argv)
                 ret = go_to(cal, aside, timelocal(&new_date), &pad_pos);
                 break;
             case 't':
+            case 'n':
                 new_date = cur_date;
                 ret = go_to(cal, aside, raw_time, &pad_pos);
                 break;
             case 'e':
+            case 'i':
+            case '\n':
                 if (ecmd) {
                     curs_set(1);
                     system(ecmd);
