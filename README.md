@@ -26,16 +26,18 @@ This is a text based diary, inspired by [khal](https://github.com/pimutils/khal)
 
 4. Use the keypad or VIM-like shortcuts to move between dates:
 
-    e,enter Edit the current entry
-    t,n     Jump to today
+    ```
+    e, Enter  Edit the current entry
+    t,        Jump to today
 
-    j       go forward by 1 week
-    k       go backward by 1 week
-    h       go left by 1 day
-    l       go right by 1 day
+    j         go forward by 1 week
+    k         go backward by 1 week
+    h         go left by 1 day
+    l         go right by 1 day
 
-    g       go to the first date
-    G       go to the last date
+    g         go to the first date
+    G         go to the last date
 
-    J       Go forward by 1 month
-    K       Go backward by 1 month
+    J         Go forward by 1 month
+    K         Go backward by 1 month
+    ```
