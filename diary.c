@@ -1,6 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <errno.h>
+
+#include <sys/types.h>
+#include <dirent.h>
+
 #include <ncurses.h>
 
 #define YEAR_RANGE 1
@@ -158,9 +163,39 @@ void setup_cal_timeframe() {
 
 int main(int argc, char** argv)
 {
+    // Get the diary directory via environment variable or argument
+    // If both are given, the argument takes precedence
+    char* diary_dir = NULL;
     if (argc < 2) {
-        printf("Expect diary directory as command line argument\n");
-        return 0;
+        diary_dir = getenv("DIARY_DIR");
+        if (diary_dir == NULL)
+        {
+            fprintf(stderr, "The diary directory must ge given as command line "
+                            "argument or in the DIARY_DIR environment variable\n");
+            return 1;
+        }
+    }
+    else
+    {
+        diary_dir = argv[1];
+    }
+
+    // Check if that directory exists
+    DIR* diary_dir_ptr = opendir(diary_dir);
+    if (diary_dir_ptr)
+    {
+        // Directory exists, continue
+        closedir(diary_dir_ptr);
+    }
+    else if (errno = ENOENT)
+    {
+        fprintf(stderr, "The directory '%s' does not exist\n", diary_dir);
+        return 2;
+    }
+    else
+    {
+        fprintf(stderr, "The directory '%s' could not be opened\n", diary_dir);
+        return 1;
     }
 
     setup_cal_timeframe();
@@ -182,7 +217,6 @@ int main(int argc, char** argv)
 
     int ch;
     struct tm new_date;
-    char* diary_dir = argv[1];
     // init the current pad possition at the very end,
     // such that the cursor is displayed top of screen
     int pad_pos = 9999999;
