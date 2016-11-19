@@ -16,11 +16,11 @@ char curs_date_str[70];
 struct tm cal_start;
 struct tm cal_end;
 
+static const char* WEEKDAYS[] = {"Mo","Tu","We","Th","Fr","Sa","Su", NULL};
+
 void draw_wdays(WINDOW* head) {
-    char* weekdays[]    = {"Mo","Tu","We","Th","Fr","Sa","Su"};
-    int wd;
-    for (wd = 0; wd < sizeof(weekdays)/sizeof(weekdays[0]); wd++) {
-        waddstr(head, weekdays[wd]);
+    for (char** wd = (char**)WEEKDAYS; *wd; wd++) {
+        waddstr(head, *wd);
         waddch(head, ' ');
     }
     wrefresh(head);
@@ -81,12 +81,7 @@ bool is_leap(int year) {
     // normally leap is every 4 years,
     // but is skipped every 100 years,
     // unless it is divisible by 400
-    if (year % 400 == 0)
-        return true;
-    if (year % 4 == 0 && year % 100 != 0)
-        return true;
-
-    return false;
+    return (year % 400 == 0) || (year % 4 == 0 && year % 100 != 0);
 }
 
 void read_diary(char* dir) {
