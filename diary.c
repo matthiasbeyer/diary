@@ -232,6 +232,7 @@ int main(int argc, char** argv)
         char* ecmd = curs_date_edit_cmd(diary_dir);
 
         switch(ch) {
+            // Basic movements
             case 'j':
             case KEY_DOWN:
                 new_date.tm_mday += 7;
@@ -252,13 +253,36 @@ int main(int argc, char** argv)
                 new_date.tm_mday--;
                 ret = go_to(cal, aside, timelocal(&new_date), &pad_pos);
                 break;
+
+            // Jump to top/bottom of page
+            case 'g':
+                ret = go_to(cal, aside, timelocal(&cal_start), &pad_pos);
+                break;
+            case 'G':
+                ret = go_to(cal, aside, timelocal(&cal_end), &pad_pos);
+                break;
+
+            // Jump backward/forward by a month
+            case 'K':
+                if (new_date.tm_mday == 1)
+                    new_date.tm_mon--;
+                new_date.tm_mday = 1;
+                ret = go_to(cal, aside, timelocal(&new_date), &pad_pos);
+                break;
+            case 'J':
+                new_date.tm_mon++;
+                new_date.tm_mday = 1;
+                ret = go_to(cal, aside, timelocal(&new_date), &pad_pos);
+                break;
+
+            // Today shortcut
             case 't':
             case 'n':
                 new_date = cur_date;
                 ret = go_to(cal, aside, raw_time, &pad_pos);
                 break;
+            // Edit/create a diary entry
             case 'e':
-            case 'i':
             case '\n':
                 if (ecmd) {
                     curs_set(1);
