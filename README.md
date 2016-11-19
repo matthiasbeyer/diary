@@ -10,7 +10,7 @@ This is a text based diary, inspired by [khal](https://github.com/pimutils/khal)
     export EDITOR=vim
     ```
     
-2. Compile the diary with ncurses library:
+2. Compile (requires ncurses):
     ```
     make clean; make;
     ```
