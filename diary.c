@@ -227,6 +227,7 @@ int main(int argc, char** argv)
                     curs_set(1);
                     system(ecmd);
                     curs_set(0);
+                    keypad(cal, TRUE);
                 }
                 break;
         }
