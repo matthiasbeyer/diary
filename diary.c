@@ -19,7 +19,8 @@ struct tm cal_end;
 static const char* WEEKDAYS[] = {"Mo","Tu","We","Th","Fr","Sa","Su", NULL};
 
 void draw_wdays(WINDOW* head) {
-    for (char** wd = (char**)WEEKDAYS; *wd; wd++) {
+    char** wd = (char**)WEEKDAYS;
+    for (wd = (char**)WEEKDAYS; *wd; wd++) {
         waddstr(head, *wd);
         waddch(head, ' ');
     }
