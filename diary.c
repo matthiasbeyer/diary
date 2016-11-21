@@ -161,39 +161,30 @@ void setup_cal_timeframe() {
     mktime(&cal_end);
 }
 
-int main(int argc, char** argv)
-{
+int main(int argc, char** argv) {
     // Get the diary directory via environment variable or argument
     // If both are given, the argument takes precedence
     char* diary_dir = NULL;
     if (argc < 2) {
         diary_dir = getenv("DIARY_DIR");
-        if (diary_dir == NULL)
-        {
+        if (diary_dir == NULL) {
             fprintf(stderr, "The diary directory must ge given as command line "
                             "argument or in the DIARY_DIR environment variable\n");
             return 1;
         }
-    }
-    else
-    {
+    } else {
         diary_dir = argv[1];
     }
 
     // Check if that directory exists
     DIR* diary_dir_ptr = opendir(diary_dir);
-    if (diary_dir_ptr)
-    {
+    if (diary_dir_ptr) {
         // Directory exists, continue
         closedir(diary_dir_ptr);
-    }
-    else if (errno = ENOENT)
-    {
+    } else if (errno = ENOENT) {
         fprintf(stderr, "The directory '%s' does not exist\n", diary_dir);
         return 2;
-    }
-    else
-    {
+    } else {
         fprintf(stderr, "The directory '%s' could not be opened\n", diary_dir);
         return 1;
     }
@@ -277,7 +268,6 @@ int main(int argc, char** argv)
 
             // Today shortcut
             case 't':
-            case 'n':
                 new_date = cur_date;
                 ret = go_to(cal, aside, raw_time, &pad_pos);
                 break;
