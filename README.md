@@ -9,19 +9,46 @@ This is a text based diary, inspired by [khal](https://github.com/pimutils/khal)
     ```
     export EDITOR=vim
     ```
-    
+
 2. Compile (requires ncurses):
     ```
-    make clean; make;
+    make
     ```
-    
-3. Run the diary with the folder for the text files as first argument:
-    ```
-    ./diary ~/.diary
-    ```
-    
-  The text files in this folder will be named 'yyyy-mm-dd'.
-  
-  (Optionally create an alias for convencience: `alias diary="~/.bin/diary ~/.diary")`
 
-4. Use the keypad or VIM-like shortcuts to move between dates. Type 't' for today and 'e' to edit. That's it that's all.
+3. Install the binary (optional):
+    ```
+    sudo make install
+    ```
+
+   This will copy the binary to /usr/local/bin. To use a different path,
+   change the `INSTALL_DIR` variable in the makefile. You can undo this
+   with `sudo make uninstall`.
+
+4. Run the diary with the folder for the text files as first argument:
+    ```
+    diary ~/.diary
+    ```
+
+   Instead of this, you can also set the environment variable `DIARY_DIR`
+   to the desired directory. If both an argument and the environment
+   variable are given, the argument takes precedence.
+
+   The text files in this folder will be named 'yyyy-mm-dd'.
+
+5. Use the keypad or VIM-like shortcuts to move between dates:
+
+    ```
+    e, Enter  Edit the current entry
+    t         Jump to today
+
+    j, down   go forward by 1 week
+    k, up     go backward by 1 week
+    h, left   go left by 1 day
+    l, right  go right by 1 day
+
+    g         go to the first date
+    G         go to the last date
+
+    J         Go forward by 1 month
+    K         Go backward by 1 month
+    ```
