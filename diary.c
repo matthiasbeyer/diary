@@ -92,7 +92,7 @@ bool is_leap(int year) {
 
 void read_diary(char* dir) {
     int width = COLS - ASIDE_WIDTH - CAL_WIDTH;
-    WINDOW* prev = newpad(LINES - 1, width);
+    WINDOW* prev = newwin(LINES - 1, width, 0, ASIDE_WIDTH + CAL_WIDTH);
 
     wclear(prev);
     char buff[width];
@@ -107,7 +107,7 @@ void read_diary(char* dir) {
         }
         fclose(fp);
     }
-    prefresh(prev, 0, 0, 1, CAL_WIDTH + ASIDE_WIDTH, LINES, COLS);
+    wrefresh(prev);
 }
 
 bool go_to(WINDOW* calendar, WINDOW* month_sidebar, time_t date, int* cur_pad_pos) {
