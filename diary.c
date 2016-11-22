@@ -9,8 +9,10 @@
 #include <ncurses.h>
 
 #define YEAR_RANGE 1
-#define CAL_WIDTH 21
-#define ASIDE_WIDTH 4
+#define CAL_MONTH_WIDTH 4
+#define CAL_DAY_WIDTH 21
+#define CAL_TO_TEXT_WIDTH 3
+#define CAL_WIDTH (CAL_MONTH_WIDTH + CAL_DAY_WIDTH + CAL_TO_TEXT_WIDTH)
 #define MAX_MONTH_HEIGHT 6
 
 int cy, cx;
@@ -91,8 +93,8 @@ bool is_leap(int year) {
 }
 
 void read_diary(char* dir) {
-    int width = COLS - ASIDE_WIDTH - CAL_WIDTH;
-    WINDOW* prev = newwin(LINES - 1, width, 1, ASIDE_WIDTH + CAL_WIDTH);
+    int width = COLS - CAL_WIDTH;
+    WINDOW* prev = newwin(LINES - 1, width, 1, CAL_WIDTH);
 
     wclear(prev);
     char buff[width];
@@ -129,8 +131,8 @@ bool go_to(WINDOW* calendar, WINDOW* month_sidebar, time_t date, int* cur_pad_po
         *cur_pad_pos = diff_weeks;
     if (diff_weeks > *cur_pad_pos + LINES - 2)
         *cur_pad_pos = diff_weeks - LINES + 2;
-    prefresh(month_sidebar, *cur_pad_pos, 0, 1,           0, LINES - 1, ASIDE_WIDTH);
-    prefresh(calendar,      *cur_pad_pos, 0, 1, ASIDE_WIDTH, LINES - 1, ASIDE_WIDTH + CAL_WIDTH);
+    prefresh(month_sidebar, *cur_pad_pos, 0, 1,           0, LINES - 1, CAL_MONTH_WIDTH);
+    prefresh(calendar,      *cur_pad_pos, 0, 1, CAL_MONTH_WIDTH, LINES - 1, CAL_MONTH_WIDTH + CAL_DAY_WIDTH);
 
     return true;
 }
@@ -181,7 +183,7 @@ int main(int argc, char** argv) {
     if (diary_dir_ptr) {
         // Directory exists, continue
         closedir(diary_dir_ptr);
-    } else if (errno = ENOENT) {
+    } else if (errno == ENOENT) {
         fprintf(stderr, "The directory '%s' does not exist\n", diary_dir);
         return 2;
     } else {
@@ -195,14 +197,14 @@ int main(int argc, char** argv) {
     raw();
     curs_set(0);
 
-    WINDOW* date_header = newwin(1, 10, 0, ASIDE_WIDTH + CAL_WIDTH);
+    WINDOW* date_header = newwin(1, 10, 0, CAL_WIDTH-2);
     wattron(date_header, A_BOLD);
     update_date(date_header);
-    WINDOW* wdays_header = newwin(1, 3 * 7, 0, ASIDE_WIDTH);
+    WINDOW* wdays_header = newwin(1, 3 * 7, 0, CAL_MONTH_WIDTH);
     draw_wdays(wdays_header);
 
-    WINDOW* aside = newpad((YEAR_RANGE * 2 + 1) * 12 * MAX_MONTH_HEIGHT, ASIDE_WIDTH);
-    WINDOW* cal = newpad((YEAR_RANGE * 2 + 1) * 12 * MAX_MONTH_HEIGHT, CAL_WIDTH);
+    WINDOW* aside = newpad((YEAR_RANGE * 2 + 1) * 12 * MAX_MONTH_HEIGHT, CAL_MONTH_WIDTH);
+    WINDOW* cal = newpad((YEAR_RANGE * 2 + 1) * 12 * MAX_MONTH_HEIGHT, CAL_DAY_WIDTH);
     keypad(cal, TRUE);
     draw_calendar(cal, aside);
 
