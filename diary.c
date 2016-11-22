@@ -36,7 +36,7 @@ void draw_calendar(WINDOW* number_pad, WINDOW* month_pad) {
     struct tm i = cal_start;
     char month[10];
 
-    while (timelocal(&i) <= timelocal(&cal_end)) {
+    while (mktime(&i) <= mktime(&cal_end)) {
         getyx(number_pad, cy, cx);
         mvwprintw(number_pad, cy, cx, "%2i", i.tm_mday);
         waddch(number_pad, ' ');
@@ -111,10 +111,10 @@ void read_diary(char* dir) {
 }
 
 bool go_to(WINDOW* calendar, WINDOW* month_sidebar, time_t date, int* cur_pad_pos) {
-    if (date < timelocal(&cal_start) || date > timelocal(&cal_end))
+    if (date < mktime(&cal_start) || date > mktime(&cal_end))
         return false;
 
-    int diff_seconds = date - timelocal(&cal_start);
+    int diff_seconds = date - mktime(&cal_start);
     int diff_days = diff_seconds / 60 / 60 / 24;
     int diff_weeks = diff_days / 7;
     int diff_wdays = diff_days % 7;
@@ -227,30 +227,30 @@ int main(int argc, char** argv) {
             case 'j':
             case KEY_DOWN:
                 new_date.tm_mday += 7;
-                ret = go_to(cal, aside, timelocal(&new_date), &pad_pos);
+                ret = go_to(cal, aside, mktime(&new_date), &pad_pos);
                 break;
             case 'k':
             case KEY_UP:
                 new_date.tm_mday -= 7;
-                ret = go_to(cal, aside, timelocal(&new_date), &pad_pos);
+                ret = go_to(cal, aside, mktime(&new_date), &pad_pos);
                 break;
             case 'l':
             case KEY_RIGHT:
                 new_date.tm_mday++;
-                ret = go_to(cal, aside, timelocal(&new_date), &pad_pos);
+                ret = go_to(cal, aside, mktime(&new_date), &pad_pos);
                 break;
             case 'h':
             case KEY_LEFT:
                 new_date.tm_mday--;
-                ret = go_to(cal, aside, timelocal(&new_date), &pad_pos);
+                ret = go_to(cal, aside, mktime(&new_date), &pad_pos);
                 break;
 
             // Jump to top/bottom of page
             case 'g':
-                ret = go_to(cal, aside, timelocal(&cal_start), &pad_pos);
+                ret = go_to(cal, aside, mktime(&cal_start), &pad_pos);
                 break;
             case 'G':
-                ret = go_to(cal, aside, timelocal(&cal_end), &pad_pos);
+                ret = go_to(cal, aside, mktime(&cal_end), &pad_pos);
                 break;
 
             // Jump backward/forward by a month
@@ -258,12 +258,12 @@ int main(int argc, char** argv) {
                 if (new_date.tm_mday == 1)
                     new_date.tm_mon--;
                 new_date.tm_mday = 1;
-                ret = go_to(cal, aside, timelocal(&new_date), &pad_pos);
+                ret = go_to(cal, aside, mktime(&new_date), &pad_pos);
                 break;
             case 'J':
                 new_date.tm_mon++;
                 new_date.tm_mday = 1;
-                ret = go_to(cal, aside, timelocal(&new_date), &pad_pos);
+                ret = go_to(cal, aside, mktime(&new_date), &pad_pos);
                 break;
 
             // Today shortcut
