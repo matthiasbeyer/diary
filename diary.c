@@ -232,9 +232,9 @@ int main(int argc, char** argv) {
 
     int ch;
     struct tm new_date;
-    // init the current pad possition at the very end,
-    // such that the cursor is displayed top of screen
-    int pad_pos = 9999999;
+    // init the current pad possition at the very begining,
+    // such that the cursor is displayed bottom of screen
+    int pad_pos = 0;
 
     wmove(cal, 0, 0);
     getyx(cal, cy, cx);
