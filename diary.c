@@ -92,7 +92,7 @@ bool is_leap(int year) {
 
 void read_diary(char* dir) {
     int width = COLS - ASIDE_WIDTH - CAL_WIDTH;
-    WINDOW* prev = newwin(LINES - 1, width, 0, ASIDE_WIDTH + CAL_WIDTH);
+    WINDOW* prev = newwin(LINES - 1, width, 1, ASIDE_WIDTH + CAL_WIDTH);
 
     wclear(prev);
     char buff[width];
