@@ -90,10 +90,7 @@ bool is_leap(int year) {
     return (year % 400 == 0) || (year % 4 == 0 && year % 100 != 0);
 }
 
-void read_diary(char* dir) {
-    int width = COLS - ASIDE_WIDTH - CAL_WIDTH;
-    WINDOW* prev = newwin(LINES - 1, width, 1, ASIDE_WIDTH + CAL_WIDTH);
-
+WINDOW* read_diary(char* dir, WINDOW* prev, int width) {
     wclear(prev);
     char buff[width];
     int i = 0;
@@ -108,6 +105,8 @@ void read_diary(char* dir) {
         fclose(fp);
     }
     wrefresh(prev);
+
+    return prev;
 }
 
 bool go_to(WINDOW* calendar, WINDOW* month_sidebar, time_t date, int* cur_pad_pos) {
@@ -208,6 +207,9 @@ int main(int argc, char** argv) {
 
     int ch;
     struct tm new_date;
+    int prev_width = COLS - ASIDE_WIDTH - CAL_WIDTH;
+    int prev_height = LINES - 1;
+
     // init the current pad possition at the very end,
     // such that the cursor is displayed top of screen
     int pad_pos = 9999999;
@@ -215,7 +217,9 @@ int main(int argc, char** argv) {
     wmove(cal, 0, 0);
     getyx(cal, cy, cx);
     bool ret = go_to(cal, aside, raw_time, &pad_pos);
-    read_diary(diary_dir);
+
+    WINDOW* prev = newwin(prev_height, prev_width, 1, ASIDE_WIDTH + CAL_WIDTH);
+    prev = read_diary(diary_dir, prev, prev_width);
 
     do {
         ch = wgetch(cal);
@@ -285,7 +289,12 @@ int main(int argc, char** argv) {
 
         if (ret) {
             update_date(date_header);
-            read_diary(diary_dir);
+
+            // adjust prev width if terminal was resized in the mean time
+            prev_width = COLS - ASIDE_WIDTH - CAL_WIDTH;
+            wresize(prev, prev_height, prev_width);
+
+            prev = read_diary(diary_dir, prev, prev_width);
         }
     } while (ch != 'q');
 
