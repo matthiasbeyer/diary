@@ -9,7 +9,7 @@ CFLAGS = -lncurses
 default: $(TARGET)
 
 $(TARGET): $(SRC)
-	$(CC) $(CFLAGS) $(SRC) -o $(TARGET)
+	$(CC) $(SRC) -o $(TARGET) $(CFLAGS)
 
 clean:
 	rm -f $(TARGET)
