@@ -37,12 +37,7 @@ void draw_calendar(WINDOW* number_pad, WINDOW* month_pad) {
     char month[10];
 
     while (mktime(&i) <= mktime(&cal_end)) {
-        getyx(number_pad, cy, cx);
-        mvwprintw(number_pad, cy, cx, "%2i", i.tm_mday);
-
-        // Highlight current day
-        if ((cur_date.tm_year == i.tm_year) && (cur_date.tm_yday == i.tm_yday))
-            wchgat(number_pad, 2, A_UNDERLINE, 0, NULL);
+        wprintw(number_pad, "%2i", i.tm_mday);
         waddch(number_pad, ' ');
 
         if (i.tm_mday == 1) {
@@ -128,7 +123,7 @@ bool go_to(WINDOW* calendar, WINDOW* month_sidebar, time_t date, int* cur_pad_po
 
     // Remove the STANDOUT attribute from the day we are leaving
     chtype current_attrs = mvwinch(calendar, cy, cx) & A_ATTRIBUTES;
-    // Leave every attr as is, but turn off A_STANDOUT
+    // Leave every attr as is, but turn off STANDOUT
     current_attrs &= ~A_STANDOUT;
     mvwchgat(calendar, cy, cx, 2, current_attrs, 0, NULL);
 
@@ -218,18 +213,16 @@ int main(int argc, char** argv) {
     keypad(cal, TRUE);
     draw_calendar(cal, aside);
 
-    int ch;
+    int ch, pad_pos = 0;
     struct tm new_date;
     int prev_width = COLS - ASIDE_WIDTH - CAL_WIDTH;
     int prev_height = LINES - 1;
 
-    // init the current pad possition at the very end,
-    // such that the cursor is displayed top of screen
-    int pad_pos = 9999999;
-
-    wmove(cal, 0, 0);
-    getyx(cal, cy, cx);
     bool ret = go_to(cal, aside, raw_time, &pad_pos);
+    // Mark current day
+    chtype atrs = winch(cal) & A_ATTRIBUTES;
+    wchgat(cal, 2, atrs | A_UNDERLINE, 0, NULL);
+    prefresh(cal, pad_pos, 0, 1, ASIDE_WIDTH, LINES - 1, ASIDE_WIDTH + CAL_WIDTH);
 
     WINDOW* prev = newwin(prev_height, prev_width, 1, ASIDE_WIDTH + CAL_WIDTH);
     prev = read_diary(diary_dir, prev, prev_width);
