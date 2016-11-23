@@ -180,7 +180,7 @@ int main(int argc, char** argv) {
     if (diary_dir_ptr) {
         // Directory exists, continue
         closedir(diary_dir_ptr);
-    } else if (errno = ENOENT) {
+    } else if (errno == ENOENT) {
         fprintf(stderr, "The directory '%s' does not exist\n", diary_dir);
         return 2;
     } else {
