@@ -39,6 +39,10 @@ void draw_calendar(WINDOW* number_pad, WINDOW* month_pad) {
     while (mktime(&i) <= mktime(&cal_end)) {
         getyx(number_pad, cy, cx);
         mvwprintw(number_pad, cy, cx, "%2i", i.tm_mday);
+
+        // Highlight current day
+        if ((cur_date.tm_year == i.tm_year) && (cur_date.tm_yday == i.tm_yday))
+            wchgat(number_pad, 2, A_UNDERLINE, 0, NULL);
         waddch(number_pad, ' ');
 
         if (i.tm_mday == 1) {
@@ -121,8 +125,17 @@ bool go_to(WINDOW* calendar, WINDOW* month_sidebar, time_t date, int* cur_pad_po
     localtime_r(&date, &curs_date);
 
     getyx(calendar, cy, cx);
-    mvwchgat(calendar, cy        , 0             , -1, A_NORMAL,   0, NULL);
-    mvwchgat(calendar, diff_weeks, diff_wdays * 3,  2, A_STANDOUT, 0, NULL);
+
+    // Remove the STANDOUT attribute from the day we are leaving
+    chtype current_attrs = mvwinch(calendar, cy, cx) & A_ATTRIBUTES;
+    // Leave every attr as is, but turn off A_STANDOUT
+    current_attrs &= ~A_STANDOUT;
+    mvwchgat(calendar, cy, cx, 2, current_attrs, 0, NULL);
+
+    // Add the STANDOUT attribute to the day we are entering
+    chtype new_attrs =  mvwinch(calendar, diff_weeks, diff_wdays * 3) & A_ATTRIBUTES;
+    new_attrs |= A_STANDOUT;
+    mvwchgat(calendar, diff_weeks, diff_wdays * 3, 2, new_attrs, 0, NULL);
 
     if (diff_weeks < *cur_pad_pos)
         *cur_pad_pos = diff_weeks;
