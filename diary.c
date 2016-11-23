@@ -167,7 +167,7 @@ int main(int argc, char** argv) {
     if (argc < 2) {
         diary_dir = getenv("DIARY_DIR");
         if (diary_dir == NULL) {
-            fprintf(stderr, "The diary directory must ge given as command line "
+            fprintf(stderr, "The diary directory must be given as command line "
                             "argument or in the DIARY_DIR environment variable\n");
             return 1;
         }
@@ -210,7 +210,7 @@ int main(int argc, char** argv) {
     int prev_width = COLS - ASIDE_WIDTH - CAL_WIDTH;
     int prev_height = LINES - 1;
 
-    // init the current pad possition at the very end,
+    // init the current pad position at the very end,
     // such that the cursor is displayed top of screen
     int pad_pos = 9999999;
 
