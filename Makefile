@@ -1,6 +1,7 @@
 TARGET = diary
 SRC = diary.c
-INSTALL_DIR = /usr/local/bin
+PREFIX ?= /usr/local
+BINDIR ?= $(DESTDIR)$(PREFIX)/bin
 
 CC = gcc
 CFLAGS = -lncurses
@@ -14,7 +15,7 @@ clean:
 	rm -f $(TARGET)
 
 install: $(TARGET)
-	cp $(TARGET) $(INSTALL_DIR)/$(TARGET)
+	cp $(TARGET) $(BINDIR)/$(TARGET)
 
 uninstall:
-	rm -f $(INSTALL_DIR)/$(TARGET)
+	rm -f $(BINDIR)/$(TARGET)
