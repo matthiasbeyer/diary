@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <time.h>
 #include <errno.h>
@@ -15,13 +16,16 @@
 
 int cy, cx;
 time_t raw_time;
-struct tm cur_date;
+struct tm today;
 struct tm curs_date;
-char curs_date_str[70];
 struct tm cal_start;
 struct tm cal_end;
 
 static const char* WEEKDAYS[] = {"Mo","Tu","We","Th","Fr","Sa","Su", NULL};
+
+void get_date_str(struct tm* date, char* date_str, int date_str_size) {
+    strftime(date_str, date_str_size, "%Y-%m-%d", date);
+}
 
 void draw_wdays(WINDOW* head) {
     char** wd;
@@ -32,12 +36,19 @@ void draw_wdays(WINDOW* head) {
     wrefresh(head);
 }
 
-void draw_calendar(WINDOW* number_pad, WINDOW* month_pad) {
+void draw_calendar(WINDOW* number_pad, WINDOW* month_pad, char* diary_dir) {
     struct tm i = cal_start;
     char month[10];
+    bool has_entry;
 
     while (mktime(&i) <= mktime(&cal_end)) {
+        has_entry = access(fpath(dirary_dir, &i), F_OK) != -1);
+        getyx(number_pad, cy, cx);
+        if (has_entry)
+            wattron(number_pad, A_BOLD);
         wprintw(number_pad, "%2i", i.tm_mday);
+        if (has_entry)
+            wattroff(number_pad, A_BOLD);
         waddch(number_pad, ' ');
 
         if (i.tm_mday == 1) {
@@ -52,34 +63,40 @@ void draw_calendar(WINDOW* number_pad, WINDOW* month_pad) {
 }
 
 void update_date(WINDOW* dh) {
+    char dstr[16];
     mktime(&curs_date);
-    strftime(curs_date_str, sizeof curs_date_str, "%Y-%m-%d", &curs_date);
-    mvwaddstr(dh, 0, 0, curs_date_str);
+    get_date_str(&curs_date, dstr, sizeof(dstr));
+    mvwaddstr(dh, 0, 0, dstr);
     wrefresh(dh);
 }
 
-char* curs_date_file_path(char* dir) {
-    static char path[100];
+char* fpath(char* dir, struct tm* date) {
+    char path[100];
+    char dstr[16];
 
+    // add path of the diary dir
     strcpy(path, dir);
     if (dir[strlen(dir) - 1] != '/')
         strcat(path, "/");
-    strcat(path, curs_date_str);
+
+    // append date to the path
+    get_date_str(date, dstr, sizeof(dstr));
+    strcat(path, dstr);
 
     return path;
 }
 
-char* curs_date_edit_cmd(char* dir) {
-    static char edit_cmd[150];
+char* edit_cmd(char* dir, struct tm* date) {
+    static char ecmd[150];
     char* editor = getenv("EDITOR");
     if (editor == NULL)
         return NULL;
 
-    strcpy(edit_cmd, editor);
-    strcat(edit_cmd, " ");
-    strcat(edit_cmd, curs_date_file_path(dir));
+    strcpy(ecmd, editor);
+    strcat(ecmd, " ");
+    strcat(ecmd, fpath(dir, date));
 
-    return edit_cmd;
+    return ecmd;
 }
 
 bool is_leap(int year) {
@@ -89,11 +106,11 @@ bool is_leap(int year) {
     return (year % 400 == 0) || (year % 4 == 0 && year % 100 != 0);
 }
 
-WINDOW* read_diary(char* dir, WINDOW* prev, int width) {
+WINDOW* read_diary(char* dir, struct tm* date, WINDOW* prev, int width) {
     wclear(prev);
     char buff[width];
     int i = 0;
-    char* path = curs_date_file_path(dir);
+    char* path = fpath(dir, date);
 
     FILE* fp =  fopen(path, "r");
     if (fp != NULL) {
@@ -144,10 +161,10 @@ bool go_to(WINDOW* calendar, WINDOW* month_sidebar, time_t date, int* cur_pad_po
 
 void setup_cal_timeframe() {
     raw_time = time(NULL);
-    localtime_r(&raw_time, &cur_date);
-    curs_date = cur_date;
+    localtime_r(&raw_time, &today);
+    curs_date = today;
 
-    cal_start = cur_date;
+    cal_start = today;
     cal_start.tm_year -= YEAR_RANGE;
     cal_start.tm_mon = 0;
     cal_start.tm_mday = 1;
@@ -161,7 +178,7 @@ void setup_cal_timeframe() {
         mktime(&cal_start);
     }
 
-    cal_end = cur_date;
+    cal_end = today;
     cal_end.tm_year += YEAR_RANGE;
     cal_end.tm_mon = 11;
     cal_end.tm_mday = 31;
@@ -211,7 +228,7 @@ int main(int argc, char** argv) {
     WINDOW* aside = newpad((YEAR_RANGE * 2 + 1) * 12 * MAX_MONTH_HEIGHT, ASIDE_WIDTH);
     WINDOW* cal = newpad((YEAR_RANGE * 2 + 1) * 12 * MAX_MONTH_HEIGHT, CAL_WIDTH);
     keypad(cal, TRUE);
-    draw_calendar(cal, aside);
+    draw_calendar(cal, aside, diary_dir);
 
     int ch, pad_pos = 0;
     struct tm new_date;
@@ -225,12 +242,12 @@ int main(int argc, char** argv) {
     prefresh(cal, pad_pos, 0, 1, ASIDE_WIDTH, LINES - 1, ASIDE_WIDTH + CAL_WIDTH);
 
     WINDOW* prev = newwin(prev_height, prev_width, 1, ASIDE_WIDTH + CAL_WIDTH);
-    prev = read_diary(diary_dir, prev, prev_width);
+    prev = read_diary(diary_dir, &today, prev, prev_width);
 
     do {
         ch = wgetch(cal);
         new_date = curs_date;
-        char* ecmd = curs_date_edit_cmd(diary_dir);
+        char* ecmd = edit_cmd(diary_dir, &new_date);
 
         switch(ch) {
             // Basic movements
@@ -278,7 +295,7 @@ int main(int argc, char** argv) {
 
             // Today shortcut
             case 't':
-                new_date = cur_date;
+                new_date = today;
                 ret = go_to(cal, aside, raw_time, &pad_pos);
                 break;
             // Edit/create a diary entry
@@ -300,7 +317,7 @@ int main(int argc, char** argv) {
             prev_width = COLS - ASIDE_WIDTH - CAL_WIDTH;
             wresize(prev, prev_height, prev_width);
 
-            prev = read_diary(diary_dir, prev, prev_width);
+            prev = read_diary(diary_dir, &curs_date, prev, prev_width);
         }
     } while (ch != 'q');
 
