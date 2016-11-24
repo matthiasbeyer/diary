@@ -38,6 +38,14 @@ void draw_wdays(WINDOW* head) {
     wrefresh(head);
 }
 
+bool date_has_entry(char* dir, size_t dir_size, struct tm* i) {
+    char epath[100];
+
+    // get entry path and check for existence
+    fpath(dir, dir_size, i, epath, sizeof epath);
+    return (access(epath, F_OK) != -1);
+}
+
 void draw_calendar(WINDOW* number_pad, WINDOW* month_pad, char* diary_dir, size_t diary_dir_size) {
     struct tm i = cal_start;
     char month[10];
@@ -45,9 +53,7 @@ void draw_calendar(WINDOW* number_pad, WINDOW* month_pad, char* diary_dir, size_
     bool has_entry;
 
     while (mktime(&i) <= mktime(&cal_end)) {
-        // get entry path and check for existence
-        fpath(diary_dir, diary_dir_size, &i, epath, sizeof epath);
-        has_entry = (access(epath, F_OK) != -1);
+        has_entry = date_has_entry(diary_dir, diary_dir_size, &i);
 
         if (has_entry)
             wattron(number_pad, A_BOLD);
@@ -366,6 +372,13 @@ int main(int argc, char** argv) {
                     system(ecmd);
                     curs_set(0);
                     keypad(cal, TRUE);
+                    
+                    // mark newly created entry
+                    if (date_has_entry(diary_dir, sizeof diary_dir, &new_date)) {
+                        chtype atrs = winch(cal) & A_ATTRIBUTES;
+                        wchgat(cal, 2, atrs | A_BOLD, 0, NULL);
+                        prefresh(cal, pad_pos, 0, 1, ASIDE_WIDTH, LINES - 1, ASIDE_WIDTH + CAL_WIDTH);
+                    }
                 }
                 break;
         }
