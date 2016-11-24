@@ -1,4 +1,4 @@
-# Simple CLI Diary
+# CLI Diary
 
 This is a text based diary, inspired by [khal](https://github.com/pimutils/khal). Diary entries are stored in raw text. You may say C & ncurses are old, I say paper is older..
 
