@@ -389,6 +389,7 @@ int main(int argc, char** argv) {
                 break;
             // delete entry
             case 'd':
+            case 'x':
                 if (date_has_entry(diary_dir, strlen(diary_dir), &curs_date)) {
                     // get file path of entry and delete entry
                     fpath(diary_dir, strlen(diary_dir), &curs_date, pth, sizeof pth);
