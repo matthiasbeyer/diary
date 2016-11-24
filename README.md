@@ -20,18 +20,18 @@ This is a text based diary, inspired by [khal](https://github.com/pimutils/khal)
     sudo make install
     ```
 
-   This will copy the binary to /usr/local/bin. To use a different path,
-   change the `INSTALL_DIR` variable in the makefile. You can undo this
-   with `sudo make uninstall`.
+   By default this will copy the binary to /usr/local/bin. To use a different
+   path prefix, type `sudo make --PREFIX=/usr install` to use /usr/bin for example.
+   You can uninstall diary with `sudo make uninstall`.
 
-4. Run the diary with the folder for the text files as first argument:
+4. Run the diary, with the folder for the text files as first argument:
     ```
     diary ~/.diary
     ```
 
-    By default this will copy the binary to /usr/local/bin. To use a different
-    path prefix, type `sudo make --PREFIX=/usr install` to use /usr/bin for example.
-    You can uninstall diary with `sudo make uninstall`.
+   Instead of this, you can also set the environment variable `DIARY_DIR`
+   to the desired directory. If both an argument and the environment
+   variable are given, the argument takes precedence.
 
    The text files in this folder will be named 'yyyy-mm-dd'.
 
