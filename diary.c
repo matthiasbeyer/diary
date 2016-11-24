@@ -43,6 +43,12 @@ bool date_has_entry(char* dir, size_t dir_size, struct tm* i) {
 
     // get entry path and check for existence
     fpath(dir, dir_size, i, epath, sizeof epath);
+
+    if (epath == NULL) {
+        fprintf(stderr, "Error while retrieving file path for checking entry existence");
+        return false;
+    }
+
     return (access(epath, F_OK) != -1);
 }
 
@@ -124,12 +130,14 @@ void edit_cmd(char* dir, size_t dir_size, struct tm* date, char* rcmd, size_t rc
     char* editor = getenv("EDITOR");
     if (editor == NULL) {
         fprintf(stderr, "'EDITOR' environment variable not set");
+        rcmd = NULL;
         return;
     }
 
     // set the edit command to env editor
     if (strlen(editor) + 2 > rcmd_size) {
         fprintf(stderr, "Binary path of default editor too long");
+        rcmd = NULL;
         return;
     }
     strcpy(rcmd, editor);
@@ -138,6 +146,12 @@ void edit_cmd(char* dir, size_t dir_size, struct tm* date, char* rcmd, size_t rc
     // get path of entry
     char path[100];
     fpath(dir, dir_size, date, path, sizeof path);
+
+    if (path == NULL) {
+        fprintf(stderr, "Error while retrieving file path for editing");
+        rcmd = NULL;
+        return;
+    }
 
     // concatenate editor command with entry path
     if (strlen(rcmd) + strlen(path) + 1 > rcmd_size) {
@@ -154,7 +168,8 @@ bool is_leap(int year) {
     return (year % 400 == 0) || (year % 4 == 0 && year % 100 != 0);
 }
 
-WINDOW* read_diary(char* dir, size_t dir_size, struct tm* date, WINDOW* prev, int width) {
+/* Returns WINDOW* to preview window if diary reading was successful, NULL otherwise */
+void read_diary(char* dir, size_t dir_size, struct tm* date, WINDOW* prev, int width) {
     wclear(prev);
     char buff[width];
     char path[100];
@@ -162,6 +177,11 @@ WINDOW* read_diary(char* dir, size_t dir_size, struct tm* date, WINDOW* prev, in
 
     // get entry path
     fpath(dir, dir_size, date, path, sizeof path);
+    if (path == NULL) {
+        fprintf(stderr, "Error while retrieving file path for diary reading");
+        prev = NULL;
+        return;
+    }
 
     FILE* fp =  fopen(path, "r");
     if (fp != NULL) {
@@ -171,9 +191,8 @@ WINDOW* read_diary(char* dir, size_t dir_size, struct tm* date, WINDOW* prev, in
         }
         fclose(fp);
     }
-    wrefresh(prev);
 
-    return prev;
+    wrefresh(prev);
 }
 
 bool go_to(WINDOW* calendar, WINDOW* month_sidebar, time_t date, int* cur_pad_pos) {
@@ -239,6 +258,7 @@ void setup_cal_timeframe() {
 int main(int argc, char** argv) {
     char diary_dir[80];
     char* env_var;
+    chtype atrs;
 
     // get the diary directory via environment variable or argument
     // if both are given, the argument takes precedence
@@ -300,19 +320,22 @@ int main(int argc, char** argv) {
     int prev_width = COLS - ASIDE_WIDTH - CAL_WIDTH;
     int prev_height = LINES - 1;
 
-    bool ret = go_to(cal, aside, raw_time, &pad_pos);
+    bool mv_valid = go_to(cal, aside, raw_time, &pad_pos);
     // mark current day
-    chtype atrs = winch(cal) & A_ATTRIBUTES;
+    atrs = winch(cal) & A_ATTRIBUTES;
     wchgat(cal, 2, atrs | A_UNDERLINE, 0, NULL);
     prefresh(cal, pad_pos, 0, 1, ASIDE_WIDTH, LINES - 1, ASIDE_WIDTH + CAL_WIDTH);
 
     WINDOW* prev = newwin(prev_height, prev_width, 1, ASIDE_WIDTH + CAL_WIDTH);
-    prev = read_diary(diary_dir, sizeof diary_dir, &today, prev, prev_width);
+    read_diary(diary_dir, sizeof diary_dir, &today, prev, prev_width);
 
     do {
         ch = wgetch(cal);
+        // new_date represents the desired date the user wants to go_to(),
+        // which may not be a faisable date at all
         new_date = curs_date;
         char ecmd[150];
+        char pth[100];
         edit_cmd(diary_dir, sizeof diary_dir, &new_date, ecmd, sizeof ecmd);
 
         switch(ch) {
@@ -320,30 +343,30 @@ int main(int argc, char** argv) {
             case 'j':
             case KEY_DOWN:
                 new_date.tm_mday += 7;
-                ret = go_to(cal, aside, mktime(&new_date), &pad_pos);
+                mv_valid = go_to(cal, aside, mktime(&new_date), &pad_pos);
                 break;
             case 'k':
             case KEY_UP:
                 new_date.tm_mday -= 7;
-                ret = go_to(cal, aside, mktime(&new_date), &pad_pos);
+                mv_valid = go_to(cal, aside, mktime(&new_date), &pad_pos);
                 break;
             case 'l':
             case KEY_RIGHT:
                 new_date.tm_mday++;
-                ret = go_to(cal, aside, mktime(&new_date), &pad_pos);
+                mv_valid = go_to(cal, aside, mktime(&new_date), &pad_pos);
                 break;
             case 'h':
             case KEY_LEFT:
                 new_date.tm_mday--;
-                ret = go_to(cal, aside, mktime(&new_date), &pad_pos);
+                mv_valid = go_to(cal, aside, mktime(&new_date), &pad_pos);
                 break;
 
             // jump to top/bottom of page
             case 'g':
-                ret = go_to(cal, aside, mktime(&cal_start), &pad_pos);
+                mv_valid = go_to(cal, aside, mktime(&cal_start), &pad_pos);
                 break;
             case 'G':
-                ret = go_to(cal, aside, mktime(&cal_end), &pad_pos);
+                mv_valid = go_to(cal, aside, mktime(&cal_end), &pad_pos);
                 break;
 
             // jump backward/forward by a month
@@ -351,18 +374,31 @@ int main(int argc, char** argv) {
                 if (new_date.tm_mday == 1)
                     new_date.tm_mon--;
                 new_date.tm_mday = 1;
-                ret = go_to(cal, aside, mktime(&new_date), &pad_pos);
+                mv_valid = go_to(cal, aside, mktime(&new_date), &pad_pos);
                 break;
             case 'J':
                 new_date.tm_mon++;
                 new_date.tm_mday = 1;
-                ret = go_to(cal, aside, mktime(&new_date), &pad_pos);
+                mv_valid = go_to(cal, aside, mktime(&new_date), &pad_pos);
                 break;
 
             // today shortcut
             case 't':
                 new_date = today;
-                ret = go_to(cal, aside, raw_time, &pad_pos);
+                mv_valid = go_to(cal, aside, raw_time, &pad_pos);
+                break;
+            // delete entry
+            case 'd':
+                if (date_has_entry(diary_dir, sizeof diary_dir, &curs_date)) {
+                    // get file path of entry and delete entry
+                    fpath(diary_dir, sizeof diary_dir, &curs_date, pth, sizeof pth);
+                    if (unlink(pth) != -1) {
+                        // file successfully delete, remove entry highlight
+                        atrs = winch(cal) & A_ATTRIBUTES;
+                        wchgat(cal, 2, atrs & ~A_BOLD, 0, NULL);
+                        prefresh(cal, pad_pos, 0, 1, ASIDE_WIDTH, LINES - 1, ASIDE_WIDTH + CAL_WIDTH);
+                    }
+                }
                 break;
             // edit/create a diary entry
             case 'e':
@@ -372,25 +408,29 @@ int main(int argc, char** argv) {
                     system(ecmd);
                     curs_set(0);
                     keypad(cal, TRUE);
-                    
+
                     // mark newly created entry
-                    if (date_has_entry(diary_dir, sizeof diary_dir, &new_date)) {
-                        chtype atrs = winch(cal) & A_ATTRIBUTES;
+                    if (date_has_entry(diary_dir, sizeof diary_dir, &curs_date)) {
+                        atrs = winch(cal) & A_ATTRIBUTES;
                         wchgat(cal, 2, atrs | A_BOLD, 0, NULL);
+
+                        // refresh the calendar to add highlighting
                         prefresh(cal, pad_pos, 0, 1, ASIDE_WIDTH, LINES - 1, ASIDE_WIDTH + CAL_WIDTH);
                     }
                 }
                 break;
         }
 
-        if (ret) {
+        if (mv_valid) {
             update_date(date_header);
 
-            // adjust prev width if terminal was resized in the mean time
-            prev_width = COLS - ASIDE_WIDTH - CAL_WIDTH;
-            wresize(prev, prev_height, prev_width);
-
-            prev = read_diary(diary_dir, sizeof diary_dir, &curs_date, prev, prev_width);
+            if (prev != NULL) {
+                // adjust prev width (if terminal was resized in the mean time)
+                // and read the diary
+                prev_width = COLS - ASIDE_WIDTH - CAL_WIDTH;
+                wresize(prev, prev_height, prev_width);
+                read_diary(diary_dir, sizeof diary_dir, &curs_date, prev, prev_width);
+            }
         }
     } while (ch != 'q');
 
