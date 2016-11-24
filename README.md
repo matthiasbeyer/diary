@@ -39,7 +39,7 @@ This is a text based diary, inspired by [khal](https://github.com/pimutils/khal)
 
     ```
     e, Enter  Edit the current entry
-    d         Delete/remove current entry
+    d, x      Delete/remove current entry
     t         Jump to today
 
     j, down   go forward by 1 week
