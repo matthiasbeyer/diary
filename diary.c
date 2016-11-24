@@ -117,7 +117,7 @@ void fpath(char* dir, size_t dir_size, struct tm* date, char* rpath, size_t rpat
     get_date_str(date, dstr, sizeof dstr);
 
     // append date to the result path
-    if (strlen(rpath) + sizeof dstr > rpath_size) {
+    if (strlen(rpath) + strlen(dstr) > rpath_size) {
         fprintf(stderr, "File path too long");
         rpath == NULL;
         return;
@@ -313,7 +313,7 @@ int main(int argc, char** argv) {
     WINDOW* aside = newpad((YEAR_RANGE * 2 + 1) * 12 * MAX_MONTH_HEIGHT, ASIDE_WIDTH);
     WINDOW* cal = newpad((YEAR_RANGE * 2 + 1) * 12 * MAX_MONTH_HEIGHT, CAL_WIDTH);
     keypad(cal, TRUE);
-    draw_calendar(cal, aside, diary_dir, sizeof diary_dir);
+    draw_calendar(cal, aside, diary_dir, strlen(diary_dir));
 
     int ch, pad_pos = 0;
     struct tm new_date;
@@ -327,7 +327,7 @@ int main(int argc, char** argv) {
     prefresh(cal, pad_pos, 0, 1, ASIDE_WIDTH, LINES - 1, ASIDE_WIDTH + CAL_WIDTH);
 
     WINDOW* prev = newwin(prev_height, prev_width, 1, ASIDE_WIDTH + CAL_WIDTH);
-    read_diary(diary_dir, sizeof diary_dir, &today, prev, prev_width);
+    read_diary(diary_dir, strlen(diary_dir), &today, prev, prev_width);
 
     do {
         ch = wgetch(cal);
@@ -336,7 +336,7 @@ int main(int argc, char** argv) {
         new_date = curs_date;
         char ecmd[150];
         char pth[100];
-        edit_cmd(diary_dir, sizeof diary_dir, &new_date, ecmd, sizeof ecmd);
+        edit_cmd(diary_dir, strlen(diary_dir), &new_date, ecmd, sizeof ecmd);
 
         switch(ch) {
             // basic movements
@@ -389,9 +389,9 @@ int main(int argc, char** argv) {
                 break;
             // delete entry
             case 'd':
-                if (date_has_entry(diary_dir, sizeof diary_dir, &curs_date)) {
+                if (date_has_entry(diary_dir, strlen(diary_dir), &curs_date)) {
                     // get file path of entry and delete entry
-                    fpath(diary_dir, sizeof diary_dir, &curs_date, pth, sizeof pth);
+                    fpath(diary_dir, strlen(diary_dir), &curs_date, pth, sizeof pth);
                     if (unlink(pth) != -1) {
                         // file successfully delete, remove entry highlight
                         atrs = winch(cal) & A_ATTRIBUTES;
@@ -410,7 +410,7 @@ int main(int argc, char** argv) {
                     keypad(cal, TRUE);
 
                     // mark newly created entry
-                    if (date_has_entry(diary_dir, sizeof diary_dir, &curs_date)) {
+                    if (date_has_entry(diary_dir, strlen(diary_dir), &curs_date)) {
                         atrs = winch(cal) & A_ATTRIBUTES;
                         wchgat(cal, 2, atrs | A_BOLD, 0, NULL);
 
@@ -429,7 +429,7 @@ int main(int argc, char** argv) {
                 // and read the diary
                 prev_width = COLS - ASIDE_WIDTH - CAL_WIDTH;
                 wresize(prev, prev_height, prev_width);
-                read_diary(diary_dir, sizeof diary_dir, &curs_date, prev, prev_width);
+                read_diary(diary_dir, strlen(diary_dir), &curs_date, prev, prev_width);
             }
         }
     } while (ch != 'q');
