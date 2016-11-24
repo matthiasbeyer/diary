@@ -241,7 +241,7 @@ int main(int argc, char** argv) {
         // use the environment variable if available
         env_var = getenv("DIARY_DIR");
         if (env_var == NULL) {
-            fprintf(stderr, "The diary directory must ge given as command line "
+            fprintf(stderr, "The diary directory must be given as command line "
                             "argument or in the DIARY_DIR environment variable\n");
             return 1;
         }
