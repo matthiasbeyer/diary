@@ -335,7 +335,7 @@ int main(int argc, char** argv) {
     do {
         ch = wgetch(cal);
         // new_date represents the desired date the user wants to go_to(),
-        // which may not be a faisable date at all
+        // which may not be a feasible date at all
         new_date = curs_date;
         char ecmd[150];
         char pth[100];
