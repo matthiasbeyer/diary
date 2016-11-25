@@ -417,7 +417,7 @@ int main(int argc, char** argv) {
                                 prefresh(cal, pad_pos, 0, 1, ASIDE_WIDTH,
                                          LINES - 1, ASIDE_WIDTH + CAL_WIDTH);
                             }
-                        } else if (conf_ch == 'n') {
+                        } else if (conf_ch == 27 || conf_ch == 'n') {
                             update_date(header);
                         }
                         break;
