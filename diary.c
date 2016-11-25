@@ -83,12 +83,15 @@ void draw_calendar(WINDOW* number_pad, WINDOW* month_pad, char* diary_dir, size_
     }
 }
 
-void update_date(WINDOW* dh) {
+/* Update the header with the cursor date */
+void update_date(WINDOW* header) {
     char dstr[16];
     mktime(&curs_date);
     get_date_str(&curs_date, dstr, sizeof dstr);
-    mvwaddstr(dh, 0, 0, dstr);
-    wrefresh(dh);
+
+    wclear(header);
+    mvwaddstr(header, 0, 0, dstr);
+    wrefresh(header);
 }
 
 void fpath(char* dir, size_t dir_size, struct tm* date, char* rpath, size_t rpath_size) {
@@ -195,7 +198,7 @@ void display_entry(char* dir, size_t dir_size, struct tm* date, WINDOW* win, int
     wrefresh(win);
 }
 
-bool go_to(WINDOW* calendar, WINDOW* month_sidebar, time_t date, int* cur_pad_pos) {
+bool go_to(WINDOW* calendar, WINDOW* aside, time_t date, int* cur_pad_pos) {
     if (date < mktime(&cal_start) || date > mktime(&cal_end))
         return false;
 
@@ -223,7 +226,7 @@ bool go_to(WINDOW* calendar, WINDOW* month_sidebar, time_t date, int* cur_pad_po
         *cur_pad_pos = diff_weeks;
     if (diff_weeks > *cur_pad_pos + LINES - 2)
         *cur_pad_pos = diff_weeks - LINES + 2;
-    prefresh(month_sidebar, *cur_pad_pos, 0, 1, 0, LINES - 1, ASIDE_WIDTH);
+    prefresh(aside, *cur_pad_pos, 0, 1, 0, LINES - 1, ASIDE_WIDTH);
     prefresh(calendar, *cur_pad_pos, 0, 1, ASIDE_WIDTH, LINES - 1, ASIDE_WIDTH + CAL_WIDTH);
 
     return true;
@@ -304,18 +307,18 @@ int main(int argc, char** argv) {
     raw();
     curs_set(0);
 
-    WINDOW* date_header = newwin(1, 10, 0, ASIDE_WIDTH + CAL_WIDTH);
-    wattron(date_header, A_BOLD);
-    update_date(date_header);
-    WINDOW* wdays_header = newwin(1, 3 * 7, 0, ASIDE_WIDTH);
-    draw_wdays(wdays_header);
+    WINDOW* header = newwin(1, COLS - CAL_WIDTH - ASIDE_WIDTH, 0, ASIDE_WIDTH + CAL_WIDTH);
+    wattron(header, A_BOLD);
+    update_date(header);
+    WINDOW* wdays = newwin(1, 3 * 7, 0, ASIDE_WIDTH);
+    draw_wdays(wdays);
 
     WINDOW* aside = newpad((YEAR_RANGE * 2 + 1) * 12 * MAX_MONTH_HEIGHT, ASIDE_WIDTH);
     WINDOW* cal = newpad((YEAR_RANGE * 2 + 1) * 12 * MAX_MONTH_HEIGHT, CAL_WIDTH);
     keypad(cal, TRUE);
     draw_calendar(cal, aside, diary_dir, strlen(diary_dir));
 
-    int ch, pad_pos = 0;
+    int ch, conf_ch, pad_pos = 0;
     struct tm new_date;
     int prev_width = COLS - ASIDE_WIDTH - CAL_WIDTH;
     int prev_height = LINES - 1;
@@ -336,6 +339,7 @@ int main(int argc, char** argv) {
         new_date = curs_date;
         char ecmd[150];
         char pth[100];
+        char dstr[16];
         edit_cmd(diary_dir, strlen(diary_dir), &new_date, ecmd, sizeof ecmd);
 
         switch(ch) {
@@ -393,12 +397,34 @@ int main(int argc, char** argv) {
                 if (date_has_entry(diary_dir, strlen(diary_dir), &curs_date)) {
                     // get file path of entry and delete entry
                     fpath(diary_dir, strlen(diary_dir), &curs_date, pth, sizeof pth);
-                    if (unlink(pth) != -1) {
-                        // file successfully delete, remove entry highlight
-                        atrs = winch(cal) & A_ATTRIBUTES;
-                        wchgat(cal, 2, atrs & ~A_BOLD, 0, NULL);
-                        prefresh(cal, pad_pos, 0, 1, ASIDE_WIDTH, LINES - 1, ASIDE_WIDTH + CAL_WIDTH);
+
+                    // prepare header for confirmation dialogue
+                    wclear(header);
+                    curs_set(2);
+                    noecho();
+
+                    // ask for confirmation
+                    get_date_str(&curs_date, dstr, sizeof dstr);
+                    mvwprintw(header, 0, 0, "Delete entry '%s'? [Y/n] ", dstr);
+                    bool conf = false;
+                    while (!conf) {
+                        conf_ch = wgetch(header);
+                        if (conf_ch == 'y' || conf_ch == 'Y' || conf_ch == '\n') {
+                            if (unlink(pth) != -1) {
+                                // file successfully deleted, remove entry highlight
+                                atrs = winch(cal) & A_ATTRIBUTES;
+                                wchgat(cal, 2, atrs & ~A_BOLD, 0, NULL);
+                                prefresh(cal, pad_pos, 0, 1, ASIDE_WIDTH,
+                                         LINES - 1, ASIDE_WIDTH + CAL_WIDTH);
+                            }
+                        } else if (conf_ch == 'n') {
+                            update_date(header);
+                        }
+                        break;
                     }
+
+                    echo();
+                    curs_set(0);
                 }
                 break;
             // edit/create a diary entry
@@ -416,14 +442,15 @@ int main(int argc, char** argv) {
                         wchgat(cal, 2, atrs | A_BOLD, 0, NULL);
 
                         // refresh the calendar to add highlighting
-                        prefresh(cal, pad_pos, 0, 1, ASIDE_WIDTH, LINES - 1, ASIDE_WIDTH + CAL_WIDTH);
+                        prefresh(cal, pad_pos, 0, 1, ASIDE_WIDTH,
+                                 LINES - 1, ASIDE_WIDTH + CAL_WIDTH);
                     }
                 }
                 break;
         }
 
         if (mv_valid) {
-            update_date(date_header);
+            update_date(header);
 
             // adjust prev width (if terminal was resized in the mean time)
             prev_width = COLS - ASIDE_WIDTH - CAL_WIDTH;
