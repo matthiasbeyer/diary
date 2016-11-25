@@ -168,9 +168,8 @@ bool is_leap(int year) {
     return (year % 400 == 0) || (year % 4 == 0 && year % 100 != 0);
 }
 
-/* Returns WINDOW* to preview window if diary reading was successful, NULL otherwise */
-void read_diary(char* dir, size_t dir_size, struct tm* date, WINDOW* prev, int width) {
-    wclear(prev);
+/* Update window 'win' with diary entry from date 'date' */
+void display_entry(char* dir, size_t dir_size, struct tm* date, WINDOW* win, int width) {
     char buff[width];
     char path[100];
     int i = 0;
@@ -179,20 +178,21 @@ void read_diary(char* dir, size_t dir_size, struct tm* date, WINDOW* prev, int w
     fpath(dir, dir_size, date, path, sizeof path);
     if (path == NULL) {
         fprintf(stderr, "Error while retrieving file path for diary reading");
-        prev = NULL;
         return;
     }
+
+    wclear(win);
 
     FILE* fp =  fopen(path, "r");
     if (fp != NULL) {
         while(fgets(buff, width, fp) != NULL) {
-            mvwprintw(prev, i, 0, buff);
+            mvwprintw(win, i, 0, buff);
             i++;
         }
         fclose(fp);
     }
 
-    wrefresh(prev);
+    wrefresh(win);
 }
 
 bool go_to(WINDOW* calendar, WINDOW* month_sidebar, time_t date, int* cur_pad_pos) {
@@ -327,7 +327,7 @@ int main(int argc, char** argv) {
     prefresh(cal, pad_pos, 0, 1, ASIDE_WIDTH, LINES - 1, ASIDE_WIDTH + CAL_WIDTH);
 
     WINDOW* prev = newwin(prev_height, prev_width, 1, ASIDE_WIDTH + CAL_WIDTH);
-    read_diary(diary_dir, strlen(diary_dir), &today, prev, prev_width);
+    display_entry(diary_dir, strlen(diary_dir), &today, prev, prev_width);
 
     do {
         ch = wgetch(cal);
@@ -425,13 +425,12 @@ int main(int argc, char** argv) {
         if (mv_valid) {
             update_date(date_header);
 
-            if (prev != NULL) {
-                // adjust prev width (if terminal was resized in the mean time)
-                // and read the diary
-                prev_width = COLS - ASIDE_WIDTH - CAL_WIDTH;
-                wresize(prev, prev_height, prev_width);
-                read_diary(diary_dir, strlen(diary_dir), &curs_date, prev, prev_width);
-            }
+            // adjust prev width (if terminal was resized in the mean time)
+            prev_width = COLS - ASIDE_WIDTH - CAL_WIDTH;
+            wresize(prev, prev_height, prev_width);
+
+            // read the diary
+            display_entry(diary_dir, strlen(diary_dir), &curs_date, prev, prev_width);
         }
     } while (ch != 'q');
 
