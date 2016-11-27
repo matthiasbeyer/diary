@@ -41,6 +41,7 @@ This is a text based diary, inspired by [khal](https://github.com/pimutils/khal)
     e, Enter  Edit the current entry
     d, x      Delete/remove current entry
     t         Jump to today
+    s         Jump to specific day
 
     j, down   go forward by 1 week
     k, up     go backward by 1 week

@@ -318,7 +318,9 @@ int main(int argc, char** argv) {
     keypad(cal, TRUE);
     draw_calendar(cal, aside, diary_dir, strlen(diary_dir));
 
-    int ch, conf_ch, pad_pos = 0;
+    int ch, conf_ch;
+    int pad_pos = 0;
+    int syear = 0, smonth = 0, sday = 0;
     struct tm new_date;
     int prev_width = COLS - ASIDE_WIDTH - CAL_WIDTH;
     int prev_height = LINES - 1;
@@ -386,6 +388,22 @@ int main(int argc, char** argv) {
                 mv_valid = go_to(cal, aside, mktime(&new_date), &pad_pos);
                 break;
 
+            // search for specific date
+            case 's':
+                wclear(header);
+                curs_set(2);
+                mvwprintw(header, 0, 0, "Go to date [YYYY-MM-DD]: ");
+                if (wscanw(header, "%4i-%2i-%2i", &syear, &smonth, &sday) == 3) {
+		    // struct tm.tm_year: years since 1900
+                    new_date.tm_year = syear - 1900;
+		    // struct tm.tm_mon in range [0, 11]
+                    new_date.tm_mon = smonth - 1;
+                    new_date.tm_mday = sday;
+                    mv_valid = go_to(cal, aside, mktime(&new_date), &pad_pos);
+                }
+                curs_set(0);
+                //update_date(header);
+                break;
             // today shortcut
             case 't':
                 new_date = today;
