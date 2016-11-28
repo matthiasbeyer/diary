@@ -141,7 +141,7 @@ bool go_to(struct app_state* s,
 }
 
 /* Update window 'win' with diary entry from date 'date' */
-void display_entry(char* dir, size_t dir_size, struct tm* date, WINDOW* win, int width)
+void display_entry(const char* dir, size_t dir_size, const struct tm* date, WINDOW* win, int width)
 {
     char buff[width];
     char path[100];

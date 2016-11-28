@@ -24,7 +24,7 @@ void draw_calendar(struct app_state*, WINDOW* number_pad, WINDOW* month_pad, cha
 void update_date(struct app_state*, WINDOW* header);
 
 bool go_to(struct app_state*, WINDOW* calendar, WINDOW* aside, time_t date, int* cur_pad_pos);
-void display_entry(char* dir, size_t dir_size, struct tm* date, WINDOW* win, int width);
+void display_entry(const char* dir, size_t dir_size, const struct tm* date, WINDOW* win, int width);
 void edit_cmd(char* dir, size_t dir_size, struct tm* date, char* rcmd, size_t rcmd_size);
 
 bool date_has_entry(const char* dir, size_t dir_size, const struct tm* i);
