@@ -9,6 +9,8 @@ struct app_state {
     struct tm cal_end;
 };
 
+#define DATE_FMT "%Y-%m-%d"
+
 void setup_cal_timeframe(struct app_state* s)
 {
     s->raw_time = time(NULL);
@@ -223,7 +225,7 @@ bool is_leap(int year)
 
 void get_date_str(struct tm* date, char* date_str, size_t date_str_size)
 {
-    strftime(date_str, date_str_size, "%Y-%m-%d", date);
+    strftime(date_str, date_str_size, DATE_FMT, date);
 }
 
 void fpath(char* dir, size_t dir_size, struct tm* date, char* rpath, size_t rpath_size)
